@@ -112,6 +112,25 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-black/40" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70" />
 
+      {/* Mobile sound hint — centered, fades out after 5s */}
+      {showSoundHint && (
+        <button
+          onClick={toggleMute}
+          className="sm:hidden absolute bottom-28 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 pointer-events-auto"
+          style={{ animation: 'pulseFade 2s ease-in-out infinite' }}
+          aria-label="Tap for sound"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.8">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <line x1="23" y1="9" x2="17" y2="15" />
+            <line x1="17" y1="9" x2="23" y2="15" />
+          </svg>
+          <span className="text-[9px] font-medium uppercase tracking-[0.3em] text-white/80">
+            Tap for sound
+          </span>
+        </button>
+      )}
+
       {/* Content layer */}
       <div className="relative z-10 flex h-full flex-col">
         {/* Top bar */}
