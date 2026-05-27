@@ -98,12 +98,12 @@ const HeroSection = () => {
         className="absolute inset-0 h-full w-full object-cover"
       >
         <source
-          src="https://res.cloudinary.com/df0qm8tav/video/upload/w_854,h_480,c_fill,q_auto:good/hero_qwipsl.mp4"
+          src="https://res.cloudinary.com/df0qm8tav/video/upload/w_854,h_480,c_scale,q_auto:best/hero_qwipsl.mp4"
           type="video/mp4"
           media="(max-width: 767px)"
         />
         <source
-          src="https://res.cloudinary.com/df0qm8tav/video/upload/w_1280,h_720,c_fill,q_auto:good/hero_qwipsl.mp4"
+          src="https://res.cloudinary.com/df0qm8tav/video/upload/w_1920,h_1080,c_scale,q_auto:best/hero_qwipsl.mp4"
           type="video/mp4"
         />
       </video>
