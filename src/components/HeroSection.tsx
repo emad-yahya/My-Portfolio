@@ -87,17 +87,18 @@ const HeroSection = () => {
 
   return (
     <section ref={sectionRef} className="relative h-screen w-full overflow-hidden bg-black">
-      {/* Video background — hidden on mobile to avoid loading 31 MB over cellular */}
+      {/* Video background — mobile gets 360p (0.36 MB), desktop gets 720p (1 MB) */}
       <video
         ref={videoRef}
         autoPlay
         muted
         loop
         playsInline
-        preload="metadata"
-        className="hidden md:block md:absolute md:inset-0 md:h-full md:w-full md:object-cover"
+        preload="auto"
+        className="absolute inset-0 h-full w-full object-cover"
       >
-        <source src="/intro.mp4" type="video/mp4" media="(min-width: 768px)" />
+        <source src="/intro-mobile.mp4" type="video/mp4" media="(max-width: 767px)" />
+        <source src="/intro.mp4" type="video/mp4" />
       </video>
 
       {/* Cinematic gradient overlays */}
@@ -108,13 +109,13 @@ const HeroSection = () => {
       <div className="relative z-10 flex h-full flex-col">
         {/* Top bar */}
         <FadeIn delay={0} y={-20} className="relative">
-          <div className="relative flex items-center justify-end px-6 md:px-10 pt-6 md:pt-8">
-            <ul className="hidden sm:flex sm:absolute sm:left-1/2 sm:-translate-x-1/2 items-center gap-5 sm:gap-8 md:gap-12">
+          <div className="relative flex items-center justify-between sm:justify-end px-6 md:px-10 pt-6 md:pt-8">
+            <ul className="flex items-center gap-3 sm:gap-8 md:gap-12 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
               {NAV_LINKS.map((link, i) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-xs sm:text-sm font-medium tracking-[0.2em] text-white/80 transition hover:text-white"
+                    className="text-[9px] sm:text-xs font-medium tracking-[0.08em] sm:tracking-[0.2em] text-white/80 transition hover:text-white"
                     style={{ fontFamily: "'Space Mono', monospace" }}
                   >
                     <TextScramble text={link.label.toUpperCase()} delay={i * 0.15} speed={1.5} />
@@ -183,9 +184,9 @@ const HeroSection = () => {
             </a>
           </FadeIn>
 
-          {/* Mute toggle + Sound hint — hidden on mobile (no video) */}
+          {/* Mute toggle + Sound hint */}
           <FadeIn delay={1.1} y={20}>
-            <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-3">
               {showSoundHint && (
                 <span
                   className="hidden sm:inline text-[10px] font-medium uppercase tracking-[0.25em] text-white/80"
