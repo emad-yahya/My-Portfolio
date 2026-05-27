@@ -186,24 +186,24 @@ const HeroSection = () => {
           </div>
         </div>
 
+        {/* Scroll indicator — centered */}
+        <FadeIn delay={1.1} y={20} className="absolute bottom-7 sm:bottom-10 md:bottom-12 inset-x-0 flex justify-center pointer-events-none">
+          <a href="#about" aria-label="Scroll to next section" className="pointer-events-auto group flex flex-col items-center gap-3">
+            <span className="text-[9px] sm:text-[10px] font-medium uppercase tracking-[0.35em] text-white/70 transition group-hover:text-white">
+              Scroll
+            </span>
+            <div className="relative h-12 w-px overflow-hidden bg-white/20">
+              <span
+                className="absolute inset-x-0 top-0 h-1/2 w-full bg-white"
+                style={{ animation: 'scrollLine 1.8s ease-in-out infinite' }}
+              />
+            </div>
+          </a>
+        </FadeIn>
+
         {/* Bottom bar */}
         <div className="relative flex items-end justify-end px-6 md:px-10 pb-7 sm:pb-10 md:pb-12">
-          {/* Scroll indicator — centered */}
-          <FadeIn delay={1.1} y={20} className="absolute left-1/2 -translate-x-1/2 bottom-7 sm:bottom-10 md:bottom-12">
-            <a href="#about" aria-label="Scroll to next section" className="group flex flex-col items-center gap-3">
-              <span className="text-[9px] sm:text-[10px] font-medium uppercase tracking-[0.35em] text-white/70 transition group-hover:text-white">
-                Scroll
-              </span>
-              <div className="relative h-12 w-px overflow-hidden bg-white/20">
-                <span
-                  className="absolute inset-x-0 top-0 h-1/2 w-full bg-white"
-                  style={{ animation: 'scrollLine 1.8s ease-in-out infinite' }}
-                />
-              </div>
-            </a>
-          </FadeIn>
-
-          {/* Mute toggle + Sound hint */}
+          {/* Mute toggle */}
           <FadeIn delay={1.1} y={20}>
             <div className="flex items-center gap-3">
               <button
