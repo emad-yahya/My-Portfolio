@@ -590,15 +590,158 @@ const ContactEditor = ({
   );
 };
 
+// ── GitHub publish helpers ─────────────────────────────────────────────────────
+
+const GH_OWNER = 'emad-yahya';
+const GH_REPO = 'My-Portfolio';
+const GH_FILE = 'src/lib/portfolioData.ts';
+const GH_TOKEN_KEY = 'portfolio_github_token';
+
+function toBase64(str: string): string {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+function generateFileContent(d: PortfolioData): string {
+  return `export interface SkillGroup {
+  label: string;
+  items: string[];
+}
+
+export interface Service {
+  number: string;
+  title: string;
+  description: string;
+}
+
+export interface Project {
+  number: string;
+  category: string;
+  name: string;
+  liveUrl: string;
+  col1Image1: string;
+  col1Image2: string;
+  col2Image: string;
+}
+
+export interface ContactInfo {
+  email: string;
+  whatsapp: string;
+  whatsappDisplay: string;
+  linkedin: string;
+  linkedinDisplay: string;
+  location: string;
+  copyright: string;
+  builtIn: string;
+}
+
+export interface PortfolioData {
+  about: {
+    text: string;
+    skills: SkillGroup[];
+  };
+  services: Service[];
+  projects: Project[];
+  contact: ContactInfo;
+}
+
+const STORAGE_KEY = 'portfolio_data_v1';
+
+export const DEFAULT_DATA: PortfolioData = ${JSON.stringify(d, null, 2)};
+
+export function loadData(): PortfolioData {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as PortfolioData;
+      return {
+        about: { ...DEFAULT_DATA.about, ...parsed.about },
+        services: parsed.services?.length ? parsed.services : DEFAULT_DATA.services,
+        projects: parsed.projects?.length ? parsed.projects : DEFAULT_DATA.projects,
+        contact: { ...DEFAULT_DATA.contact, ...parsed.contact },
+      };
+    }
+  } catch {}
+  return DEFAULT_DATA;
+}
+
+export function saveData(data: PortfolioData): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+`;
+}
+
+async function publishToGitHub(token: string, d: PortfolioData): Promise<void> {
+  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+  const headers = {
+    Authorization: `token ${token}`,
+    Accept: 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+  };
+
+  const getRes = await fetch(apiUrl, { headers });
+  if (!getRes.ok) throw new Error(`GitHub error ${getRes.status}`);
+  const { sha } = await getRes.json() as { sha: string };
+
+  const content = toBase64(generateFileContent(d));
+
+  const putRes = await fetch(apiUrl, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({
+      message: 'data: update portfolio content via admin panel',
+      content,
+      sha,
+    }),
+  });
+
+  if (!putRes.ok) {
+    const err = await putRes.json() as { message?: string };
+    throw new Error(err.message || `GitHub error ${putRes.status}`);
+  }
+}
+
+// ── Settings Editor ────────────────────────────────────────────────────────────
+
+const SettingsEditor = ({ token, setToken }: { token: string; setToken: (t: string) => void }) => {
+  const save = (t: string) => {
+    setToken(t);
+    localStorage.setItem(GH_TOKEN_KEY, t);
+  };
+  return (
+    <div className="flex flex-col gap-6 max-w-xl">
+      <Field label="GitHub Personal Access Token">
+        <input
+          type="password"
+          value={token}
+          onChange={(e) => save(e.target.value)}
+          className={inp}
+          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+        />
+      </Field>
+      <div className="rounded-xl border border-[#2a2a35] bg-[#141418] p-4 text-xs text-[#D7E2EA]/40 leading-relaxed flex flex-col gap-2">
+        <p className="font-medium text-[#D7E2EA]/60">How to create a token:</p>
+        <ol className="list-decimal list-inside flex flex-col gap-1">
+          <li>GitHub → Settings → Developer settings</li>
+          <li>Personal access tokens → Fine-grained tokens → Generate new token</li>
+          <li>Repository access: Only select <span className="text-[#D7E2EA]/70">My-Portfolio</span></li>
+          <li>Permissions → Repository permissions → Contents → <span className="text-[#D7E2EA]/70">Read and write</span></li>
+        </ol>
+        <p className="mt-1 text-[#D7E2EA]/25">Token is stored in your browser only — never sent anywhere except GitHub API.</p>
+      </div>
+    </div>
+  );
+};
+
 // ── Main AdminPage ─────────────────────────────────────────────────────────────
 
-type Tab = 'about' | 'services' | 'projects' | 'contact';
+type Tab = 'about' | 'services' | 'projects' | 'contact' | 'settings';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'about', label: 'About' },
   { id: 'services', label: 'Services' },
   { id: 'projects', label: 'Projects' },
   { id: 'contact', label: 'Contact' },
+  { id: 'settings', label: 'Settings' },
 ];
 
 const AdminPage = () => {
@@ -607,25 +750,42 @@ const AdminPage = () => {
   );
   const [tab, setTab] = useState<Tab>('about');
   const [saved, setSaved] = useState(false);
+  const [ghToken, setGhToken] = useState(() => localStorage.getItem(GH_TOKEN_KEY) || '');
+  const [publishing, setPublishing] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [publishErr, setPublishErr] = useState('');
   const { data, updateData } = usePortfolio();
   const [draft, setDraft] = useState<PortfolioData>(() => JSON.parse(JSON.stringify(data)));
 
+  const renumber = (d: PortfolioData): PortfolioData => ({
+    ...d,
+    services: d.services.map((s, i) => ({ ...s, number: String(i + 1).padStart(2, '0') })),
+    projects: d.projects.map((p, i) => ({ ...p, number: String(i + 1).padStart(2, '0') })),
+  });
+
   const handleSave = () => {
-    const renumbered: PortfolioData = {
-      ...draft,
-      services: draft.services.map((s, i) => ({
-        ...s,
-        number: String(i + 1).padStart(2, '0'),
-      })),
-      projects: draft.projects.map((p, i) => ({
-        ...p,
-        number: String(i + 1).padStart(2, '0'),
-      })),
-    };
+    const renumbered = renumber(draft);
     updateData(renumbered);
     setDraft(renumbered);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handlePublish = async () => {
+    if (!ghToken) { setTab('settings'); return; }
+    const renumbered = renumber(draft);
+    updateData(renumbered);
+    setDraft(renumbered);
+    setPublishing('loading');
+    setPublishErr('');
+    try {
+      await publishToGitHub(ghToken, renumbered);
+      setPublishing('success');
+      setTimeout(() => setPublishing('idle'), 4000);
+    } catch (e) {
+      setPublishErr(e instanceof Error ? e.message : 'Unknown error');
+      setPublishing('error');
+      setTimeout(() => setPublishing('idle'), 5000);
+    }
   };
 
   const handleReset = () => {
@@ -704,27 +864,54 @@ const AdminPage = () => {
         {tab === 'services' && <ServicesEditor draft={draft} setDraft={setDraft} />}
         {tab === 'projects' && <ProjectsEditor draft={draft} setDraft={setDraft} />}
         {tab === 'contact' && <ContactEditor draft={draft} setDraft={setDraft} />}
+        {tab === 'settings' && <SettingsEditor token={ghToken} setToken={setGhToken} />}
       </main>
 
       {/* Save bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#1e1e26] bg-[#0a0a0c]/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 sm:px-6 py-3.5">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 sm:px-6 py-3.5">
           <button
             onClick={handleReset}
-            className="text-xs text-[#D7E2EA]/20 hover:text-red-400/60 transition-colors"
+            className="text-xs text-[#D7E2EA]/20 hover:text-red-400/60 transition-colors shrink-0"
           >
-            Reset to defaults
+            Reset
           </button>
-          <button
-            onClick={handleSave}
-            className={`rounded-full px-6 py-2.5 text-xs font-bold uppercase tracking-[0.2em] transition-all ${
-              saved
-                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                : 'bg-white text-black hover:bg-[#D7E2EA]'
-            }`}
-          >
-            {saved ? '✓ Saved' : 'Save Changes'}
-          </button>
+          <div className="flex items-center gap-2 ml-auto">
+            {publishing === 'error' && (
+              <span className="text-[10px] text-red-400/70 max-w-[160px] truncate">{publishErr}</span>
+            )}
+            <button
+              onClick={handleSave}
+              className={`rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] transition-all ${
+                saved
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-white text-black hover:bg-[#D7E2EA]'
+              }`}
+            >
+              {saved ? '✓ Saved' : 'Save'}
+            </button>
+            <button
+              onClick={handlePublish}
+              disabled={publishing === 'loading'}
+              className={`rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] border transition-all ${
+                publishing === 'success'
+                  ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400'
+                  : publishing === 'error'
+                  ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                  : publishing === 'loading'
+                  ? 'border-[#2a2a35] text-[#D7E2EA]/30 cursor-wait'
+                  : !ghToken
+                  ? 'border-dashed border-[#D7E2EA]/20 text-[#D7E2EA]/40 hover:border-[#D7E2EA]/40'
+                  : 'border-[#D7E2EA]/20 text-[#D7E2EA]/80 hover:border-[#D7E2EA]/50 hover:text-[#D7E2EA]'
+              }`}
+            >
+              {publishing === 'success' ? '✓ Published'
+                : publishing === 'error' ? '✗ Failed'
+                : publishing === 'loading' ? 'Publishing…'
+                : !ghToken ? '⚙ Set Token'
+                : 'Publish'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
