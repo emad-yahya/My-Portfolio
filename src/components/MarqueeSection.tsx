@@ -46,7 +46,7 @@ const Row = ({ images, offset, direction }: RowProps) => {
         <div
           key={i}
           className="shrink-0 overflow-hidden rounded-2xl"
-          style={{ width: 420, height: 270 }}
+          style={{ width: 'clamp(200px, 35vw, 420px)', height: 'clamp(128px, 22vw, 270px)' }}
         >
           <img
             src={src}

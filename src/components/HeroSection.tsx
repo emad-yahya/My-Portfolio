@@ -87,17 +87,17 @@ const HeroSection = () => {
 
   return (
     <section ref={sectionRef} className="relative h-screen w-full overflow-hidden bg-black">
-      {/* Video background */}
+      {/* Video background — hidden on mobile to avoid loading 31 MB over cellular */}
       <video
         ref={videoRef}
         autoPlay
         muted
         loop
         playsInline
-        preload="auto"
-        className="absolute inset-0 h-full w-full object-cover"
+        preload="metadata"
+        className="hidden md:block md:absolute md:inset-0 md:h-full md:w-full md:object-cover"
       >
-        <source src="/intro.mp4" type="video/mp4" />
+        <source src="/intro.mp4" type="video/mp4" media="(min-width: 768px)" />
       </video>
 
       {/* Cinematic gradient overlays */}
@@ -109,7 +109,7 @@ const HeroSection = () => {
         {/* Top bar */}
         <FadeIn delay={0} y={-20} className="relative">
           <div className="relative flex items-center justify-end px-6 md:px-10 pt-6 md:pt-8">
-            <ul className="absolute left-1/2 -translate-x-1/2 flex items-center gap-5 sm:gap-8 md:gap-12">
+            <ul className="hidden sm:flex sm:absolute sm:left-1/2 sm:-translate-x-1/2 items-center gap-5 sm:gap-8 md:gap-12">
               {NAV_LINKS.map((link, i) => (
                 <li key={link.label}>
                   <a
@@ -156,11 +156,10 @@ const HeroSection = () => {
                 text="IT ENGINEER & SYSTEMS DEVELOPER · AI SYSTEMS"
                 delay={1.2}
                 speed={1.2}
-                className="mt-5 md:mt-7 block text-white/75"
+                className="mt-5 md:mt-7 block text-white/75 tracking-[0.04em] sm:tracking-[0.2em] md:tracking-[0.3em]"
                 style={{
                   fontFamily: "'Space Mono', monospace",
-                  fontSize: 'clamp(0.6rem, 1vw, 0.8rem)',
-                  letterSpacing: '0.3em',
+                  fontSize: 'clamp(0.6rem, 1.5vw, 0.8rem)',
                 }}
               />
             </FadeIn>
@@ -184,9 +183,9 @@ const HeroSection = () => {
             </a>
           </FadeIn>
 
-          {/* Mute toggle + Sound hint */}
+          {/* Mute toggle + Sound hint — hidden on mobile (no video) */}
           <FadeIn delay={1.1} y={20}>
-            <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
               {showSoundHint && (
                 <span
                   className="hidden sm:inline text-[10px] font-medium uppercase tracking-[0.25em] text-white/80"
