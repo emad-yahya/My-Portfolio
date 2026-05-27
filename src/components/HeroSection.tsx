@@ -16,7 +16,7 @@ const HeroSection = () => {
 
   // Auto-hide "Tap for sound" hint after 5 seconds
   useEffect(() => {
-    const t = setTimeout(() => setShowSoundHint(false), 5000);
+    const t = setTimeout(() => setShowSoundHint(false), 12000);
     return () => clearTimeout(t);
   }, []);
 
