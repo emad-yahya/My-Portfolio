@@ -14,6 +14,24 @@ const HeroSection = () => {
   const [muted, setMuted] = useState(true);
   const [showSoundHint] = useState(false);
 
+  // Auto-unmute on first user interaction
+  useEffect(() => {
+    const unlock = () => {
+      const v = videoRef.current;
+      if (v && v.muted) {
+        v.muted = false;
+        v.play().catch(() => { v.muted = true; setMuted(true); });
+        setMuted(false);
+      }
+    };
+    window.addEventListener('click', unlock, { once: true });
+    window.addEventListener('touchstart', unlock, { once: true });
+    return () => {
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('touchstart', unlock);
+    };
+  }, []);
+
   // Auto-mute video when scrolling past hero
   useEffect(() => {
     const section = sectionRef.current;
