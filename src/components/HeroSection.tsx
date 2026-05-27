@@ -86,7 +86,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section ref={sectionRef} className="relative h-screen w-full overflow-hidden bg-black">
+    <section ref={sectionRef} className="relative h-screen w-full overflow-hidden bg-black" style={{ height: '100svh' }}>
       {/* Video background — mobile gets 360p (0.36 MB), desktop gets 720p (1 MB) */}
       <video
         ref={videoRef}
