@@ -128,7 +128,7 @@ export const DEFAULT_DATA: PortfolioData = {
       "number": "01",
       "category": "Web · Dev",
       "name": "Website",
-      "liveUrl": "https://barber-website-and-booking-system.vercel.app/",
+      "liveUrl": "https://github-import-edit.vercel.app/",
       "col1Image1": "/projects/website/cover.png",
       "col1Image2": "/projects/website/screen2.png",
       "col2Image": "/projects/website/screen1.png"
